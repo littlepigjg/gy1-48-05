@@ -164,9 +164,9 @@ export const PET_DEFS = {
     color: '#00CED1',
     basePrice: 500,
     baseHealth: 80,
-    baseEnergy: 100,
-    baseRange: 5,
-    energyDrain: 0.015,
+    baseEnergy: 150,
+    baseRange: 6,
+    energyDrain: 0.006,
     cooldown: 0,
     upgradeCosts: [300, 600, 1200, 2500, 5000],
     upgradeType: 'range',
@@ -175,14 +175,14 @@ export const PET_DEFS = {
   [PET_TYPES.MAGNET]: {
     name: '磁力吸附',
     icon: '🧲',
-    description: '自动吸引附近挖掘出的矿石到玩家货仓',
+    description: '持续扫描并自动收集范围内的矿石',
     color: '#FF69B4',
     basePrice: 800,
     baseHealth: 100,
-    baseEnergy: 80,
-    baseRange: 3,
-    energyDrain: 0.025,
-    cooldown: 2000,
+    baseEnergy: 120,
+    baseRange: 4,
+    energyDrain: 0.008,
+    cooldown: 0,
     upgradeCosts: [400, 800, 1600, 3200, 6400],
     upgradeType: 'range',
     maxLevel: 5
@@ -194,11 +194,11 @@ export const PET_DEFS = {
     color: '#FF4500',
     basePrice: 1200,
     baseHealth: 150,
-    baseEnergy: 60,
-    baseRange: 4,
-    baseDamage: 8,
-    energyDrain: 0.03,
-    cooldown: 800,
+    baseEnergy: 120,
+    baseRange: 5,
+    baseDamage: 10,
+    energyDrain: 0.008,
+    cooldown: 600,
     upgradeCosts: [600, 1200, 2400, 4800, 9600],
     upgradeType: 'attack',
     maxLevel: 5
@@ -206,6 +206,13 @@ export const PET_DEFS = {
 };
 
 export const MAX_PETS = 2;
-export const PET_REPAIR_COST_PER_HP = 2;
-export const PET_CHARGE_COST_PER_ENERGY = 1;
+export const PET_REPAIR_COST_PER_HP = 1;
+export const PET_CHARGE_COST_PER_ENERGY = 0.3;
 export const PET_DAMAGE_FALLOFF = 0.15;
+
+export const SCOUT_MARK_TYPES = {
+  ORE: 'ore',
+  HAZARD_POISON: 'poison',
+  HAZARD_INSTABILITY: 'instability',
+  LAVA: 'lava'
+};

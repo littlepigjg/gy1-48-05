@@ -1,4 +1,4 @@
-import { TILE_SIZE, WORLD_WIDTH, WORLD_HEIGHT, SURFACE_Y, TILE_TYPES, TILE_COLORS, TILE_HARDNESS, PET_TYPES } from './constants.js';
+import { TILE_SIZE, WORLD_WIDTH, WORLD_HEIGHT, SURFACE_Y, TILE_TYPES, TILE_COLORS, TILE_HARDNESS, PET_TYPES, SCOUT_MARK_TYPES } from './constants.js';
 
 export class Renderer {
   constructor(canvas) {
@@ -59,6 +59,7 @@ export class Renderer {
     }
     if (pets) {
       this.renderPetRanges(pets, player);
+      this.renderScoutMarkers(pets);
     }
     particles.render(this.ctx, (x, y) => this.worldToScreen(x, y));
     this.renderBullets(bullets);
@@ -791,5 +792,88 @@ export class Renderer {
     }
 
     this.ctx.restore();
+  }
+
+  renderScoutMarkers(petManager) {
+    if (!petManager || typeof petManager.getAllScoutMarkers !== 'function') return;
+    const markers = petManager.getAllScoutMarkers();
+    if (!markers || markers.length === 0) return;
+
+    const time = Date.now() * 0.003;
+
+    for (const marker of markers) {
+      const wx = marker.x * TILE_SIZE + TILE_SIZE / 2;
+      const wy = marker.y * TILE_SIZE + TILE_SIZE / 2;
+      const screen = this.worldToScreen(wx, wy);
+
+      if (screen.x < -50 || screen.x > this.canvas.width + 50 ||
+          screen.y < -50 || screen.y > this.canvas.height + 50) {
+        continue;
+      }
+
+      let color, icon, label;
+      switch (marker.type) {
+        case SCOUT_MARK_TYPES.ORE:
+          const oreColors = {
+            coal: '#2F2F2F',
+            iron: '#B87333',
+            gold: '#FFD700',
+            emerald: '#50C878',
+            ruby: '#E0115F',
+            diamond: '#00CED1'
+          };
+          color = oreColors[marker.oreType] || '#FFFFFF';
+          icon = '◆';
+          label = marker.name;
+          break;
+        case SCOUT_MARK_TYPES.HAZARD_POISON:
+          color = '#7CFC00';
+          icon = '☠';
+          label = '毒气';
+          break;
+        case SCOUT_MARK_TYPES.HAZARD_INSTABILITY:
+          color = '#FF4500';
+          icon = '⚠';
+          label = '塌方';
+          break;
+        case SCOUT_MARK_TYPES.LAVA:
+          color = '#FF0000';
+          icon = '🔥';
+          label = '岩浆';
+          break;
+        default:
+          continue;
+      }
+
+      const pulse = 0.7 + Math.sin(time + marker.x + marker.y) * 0.3;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = pulse * 0.9;
+      this.ctx.shadowColor = color;
+      this.ctx.shadowBlur = 12;
+
+      this.ctx.strokeStyle = color;
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeRect(
+        screen.x - TILE_SIZE / 2 + 2,
+        screen.y - TILE_SIZE / 2 + 2,
+        TILE_SIZE - 4,
+        TILE_SIZE - 4
+      );
+
+      this.ctx.fillStyle = color;
+      this.ctx.font = 'bold 14px sans-serif';
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+      this.ctx.fillText(icon, screen.x, screen.y);
+
+      this.ctx.globalAlpha = 1;
+      this.ctx.shadowBlur = 0;
+      this.ctx.fillStyle = color;
+      this.ctx.font = 'bold 10px sans-serif';
+      this.ctx.fillText(label, screen.x, screen.y - TILE_SIZE / 2 - 6);
+
+      this.ctx.restore();
+    }
   }
 }

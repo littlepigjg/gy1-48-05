@@ -50,7 +50,7 @@ export class DefenderPet extends PetBase {
           game.particles.spawn(closestEnemy.x, closestEnemy.y, this.def.color, 4, 2, { gravity: 0, lifeMin: 6, lifeMax: 10 });
         }
 
-        this.consumeEnergy(0.05);
+        this.consumeEnergy(0.02);
       }
     } else {
       this.targetEnemy = null;

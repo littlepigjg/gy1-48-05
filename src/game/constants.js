@@ -197,7 +197,7 @@ export const PET_DEFS = {
     baseEnergy: 120,
     baseRange: 5,
     baseDamage: 10,
-    energyDrain: 0.008,
+    energyDrain: 0.004,
     cooldown: 600,
     upgradeCosts: [600, 1200, 2400, 4800, 9600],
     upgradeType: 'attack',

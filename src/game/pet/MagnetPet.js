@@ -27,10 +27,8 @@ export class MagnetPet extends PetBase {
     const centerX = Math.floor(player.x / TILE_SIZE);
     const centerY = Math.floor(player.y / TILE_SIZE);
 
-    let collected = false;
-
-    for (let dy = -tileRange; dy <= tileRange && !collected; dy++) {
-      for (let dx = -tileRange; dx <= tileRange && !collected; dx++) {
+    for (let dy = -tileRange; dy <= tileRange; dy++) {
+      for (let dx = -tileRange; dx <= tileRange; dx++) {
         const tx = centerX + dx;
         const ty = centerY + dy;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -55,8 +53,7 @@ export class MagnetPet extends PetBase {
                 game.particles.spawn(cx, cy, '#FFD700', 6, 2, { gravity: 0, lifeMin: 6, lifeMax: 10 });
               }
 
-              this.consumeEnergy(0.02);
-              collected = true;
+              this.consumeEnergy(0.01);
             }
           }
         }

@@ -111,12 +111,18 @@
         </div>
       </div>
 
-      <div id="warningMessage" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 hidden">
-        <div class="bg-red-900/90 border-4 border-red-500 rounded-lg px-8 py-4 animate-pulse">
-          <span id="warningText" class="text-red-200 font-game text-lg"></span>
+      <div id="petHud" class="absolute top-4 right-80 bg-black/70 rounded-lg p-3 border-2 border-cyan-600/50 pointer-events-none hidden">
+          <div class="text-cyan-400 font-game text-xs mb-2">🤖 机械宠物</div>
+          <div id="petHudList" class="space-y-2">
+          </div>
+        </div>
+
+        <div id="warningMessage" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 hidden">
+          <div class="bg-red-900/90 border-4 border-red-500 rounded-lg px-8 py-4 animate-pulse">
+            <span id="warningText" class="text-red-200 font-game text-lg"></span>
+          </div>
         </div>
       </div>
-    </div>
 
     <div id="shopMenu" class="absolute inset-0 bg-black/80 hidden items-center justify-center z-50">
       <div class="bg-gradient-to-b from-amber-900 to-amber-950 rounded-xl p-8 max-w-4xl w-full mx-4 border-4 border-yellow-600 shadow-2xl">
@@ -169,6 +175,22 @@
         <div class="bg-black/40 rounded-lg p-4 border border-yellow-800 mb-6">
           <h3 class="text-yellow-400 font-bold mb-3 text-lg">🔧 装备升级</h3>
           <div class="grid grid-cols-2 gap-3 text-sm" id="upgradeArea">
+          </div>
+        </div>
+
+        <div class="bg-black/40 rounded-lg p-4 border border-cyan-800 mb-6">
+          <h3 class="text-cyan-400 font-bold mb-3 text-lg">🤖 机械宠物 <span id="petCountText" class="text-sm text-gray-400 font-normal">(0/2)</span></h3>
+          
+          <div class="mb-4">
+            <div class="text-yellow-300 text-sm mb-2">购买新宠物：</div>
+            <div class="grid grid-cols-3 gap-3 text-sm" id="petShopArea">
+            </div>
+          </div>
+
+          <div id="ownedPetsArea">
+            <div class="text-yellow-300 text-sm mb-2">已拥有宠物：</div>
+            <div id="petListArea" class="space-y-2">
+            </div>
           </div>
         </div>
 

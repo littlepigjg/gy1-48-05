@@ -149,3 +149,63 @@ export const TELEPORT_COST_BASE = 30;
 export const TELEPORT_COST_PER_100M = 20;
 export const TELEPORT_DURATION = 2.5;
 export const TELEPORT_COOLDOWN = 5;
+
+export const PET_TYPES = {
+  SCOUT: 'scout',
+  MAGNET: 'magnet',
+  DEFENDER: 'defender'
+};
+
+export const PET_DEFS = {
+  [PET_TYPES.SCOUT]: {
+    name: '侦查无人机',
+    icon: '🛸',
+    description: '扩大视野范围，提前探测稀有矿石和危险区域',
+    color: '#00CED1',
+    basePrice: 500,
+    baseHealth: 80,
+    baseEnergy: 100,
+    baseRange: 5,
+    energyDrain: 0.015,
+    cooldown: 0,
+    upgradeCosts: [300, 600, 1200, 2500, 5000],
+    upgradeType: 'range',
+    maxLevel: 5
+  },
+  [PET_TYPES.MAGNET]: {
+    name: '磁力吸附',
+    icon: '🧲',
+    description: '自动吸引附近挖掘出的矿石到玩家货仓',
+    color: '#FF69B4',
+    basePrice: 800,
+    baseHealth: 100,
+    baseEnergy: 80,
+    baseRange: 3,
+    energyDrain: 0.025,
+    cooldown: 2000,
+    upgradeCosts: [400, 800, 1600, 3200, 6400],
+    upgradeType: 'range',
+    maxLevel: 5
+  },
+  [PET_TYPES.DEFENDER]: {
+    name: '防御型宠物',
+    icon: '🤖',
+    description: '自动攻击附近的敌人，保护玩家安全',
+    color: '#FF4500',
+    basePrice: 1200,
+    baseHealth: 150,
+    baseEnergy: 60,
+    baseRange: 4,
+    baseDamage: 8,
+    energyDrain: 0.03,
+    cooldown: 800,
+    upgradeCosts: [600, 1200, 2400, 4800, 9600],
+    upgradeType: 'attack',
+    maxLevel: 5
+  }
+};
+
+export const MAX_PETS = 2;
+export const PET_REPAIR_COST_PER_HP = 2;
+export const PET_CHARGE_COST_PER_ENERGY = 1;
+export const PET_DAMAGE_FALLOFF = 0.15;

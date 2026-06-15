@@ -7,6 +7,7 @@ import { UIManager } from './ui.js';
 import { ParticleSystem } from './particles.js';
 import { HazardManager } from './hazards.js';
 import { TeleportSystem } from './teleport.js';
+import { PetManager } from './pets.js';
 
 export class Game {
   constructor(canvas) {
@@ -37,6 +38,8 @@ export class Game {
     this.particles = new ParticleSystem();
     this.hazards = new HazardManager();
     this.teleport = new TeleportSystem();
+    this.pets = new PetManager();
+    this.pets.load();
     this.collapseTimer = 0;
 
     this.baseBuildingX = Math.floor(WORLD_WIDTH / 2) - 3;
@@ -73,6 +76,13 @@ export class Game {
     this.teleport = new TeleportSystem();
     this.stats = { blocksDug: 0, enemiesKilled: 0 };
     this.collapseTimer = 0;
+    
+    for (let i = 0; i < this.pets.pets.length; i++) {
+      const pet = this.pets.pets[i];
+      const angle = (i / Math.max(1, this.pets.pets.length)) * Math.PI * 2;
+      pet.x = startX * TILE_SIZE + TILE_SIZE / 2 + Math.cos(angle) * TILE_SIZE;
+      pet.y = startY * TILE_SIZE + TILE_SIZE / 2 + Math.sin(angle) * TILE_SIZE;
+    }
   }
 
   setupInput() {
@@ -213,7 +223,8 @@ export class Game {
       this.particles,
       this.baseBuildingX,
       this.hazards,
-      this.teleport
+      this.teleport,
+      this.pets
     );
 
     this.ui.updateHUD();
@@ -238,6 +249,8 @@ export class Game {
     });
 
     this.enemies.update(dt, this.player, this.world);
+    this.pets.update(dt, this.player, this.world, this.enemies.enemies, this);
+    this.checkEnemyPetDamage(dt);
     this.handleDigging(dt);
     this.handleShooting(dt);
     this.updateBullets(dt);
@@ -455,6 +468,13 @@ export class Game {
       TILE_SIZE * 1.5,
       50
     );
+    
+    this.pets.damagePetsInRange(
+      (x + 0.5) * TILE_SIZE,
+      (y + 0.5) * TILE_SIZE,
+      TILE_SIZE * 2,
+      25
+    );
 
     const idx = this.world.getIndex(x, y);
     this.world.tiles[idx] = TILE_TYPES.EMPTY;
@@ -502,6 +522,21 @@ export class Game {
       if (p.oxygen < p.maxOxygen * 0.1 && !this._oxyWarned) {
         this._oxyWarned = true;
         setTimeout(() => this._oxyWarned = false, 5000);
+      }
+    }
+  }
+
+  checkEnemyPetDamage(dt) {
+    for (const enemy of this.enemies.enemies) {
+      if (enemy.health <= 0) continue;
+      for (const pet of this.pets.pets) {
+        if (!pet.active || pet.health <= 0) continue;
+        const dx = pet.x - enemy.x;
+        const dy = pet.y - enemy.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < TILE_SIZE * 0.7) {
+          pet.takeDamage(enemy.damage * dt * 0.5);
+        }
       }
     }
   }

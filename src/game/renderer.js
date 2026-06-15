@@ -1,4 +1,4 @@
-import { TILE_SIZE, WORLD_WIDTH, WORLD_HEIGHT, SURFACE_Y, TILE_TYPES, TILE_COLORS, TILE_HARDNESS } from './constants.js';
+import { TILE_SIZE, WORLD_WIDTH, WORLD_HEIGHT, SURFACE_Y, TILE_TYPES, TILE_COLORS, TILE_HARDNESS, PET_TYPES } from './constants.js';
 
 export class Renderer {
   constructor(canvas) {
@@ -42,7 +42,7 @@ export class Renderer {
     return { x: sx, y: sy };
   }
 
-  render(dt, world, player, enemies, bullets, particles, baseBuildingX, hazards = null, teleportSystem = null) {
+  render(dt, world, player, enemies, bullets, particles, baseBuildingX, hazards = null, teleportSystem = null, pets = null) {
     if (this.shakeTime > 0) {
       this.shakeTime -= dt;
       if (this.shakeTime <= 0) this.shakeStrength = 0;
@@ -57,11 +57,17 @@ export class Renderer {
     if (hazards) {
       hazards.render(this.ctx, (x, y) => this.worldToScreen(x, y));
     }
+    if (pets) {
+      this.renderPetRanges(pets, player);
+    }
     particles.render(this.ctx, (x, y) => this.worldToScreen(x, y));
     this.renderBullets(bullets);
     this.renderEnemies(enemies);
+    if (pets) {
+      this.renderPets(pets);
+    }
     this.renderPlayer(player, teleportSystem);
-    this.renderDarkness(player);
+    this.renderDarkness(player, pets);
     this.renderBaseArrow(baseBuildingX, player);
   }
 
@@ -578,7 +584,157 @@ export class Renderer {
     this.ctx.globalAlpha = 1;
   }
 
-  renderDarkness(player) {
+  renderPets(petManager) {
+    for (const pet of petManager.pets) {
+      const screen = this.worldToScreen(pet.x, pet.y);
+      const size = TILE_SIZE * 0.5;
+      const half = size / 2;
+      const time = Date.now() * 0.003;
+
+      this.ctx.save();
+      this.ctx.translate(screen.x, screen.y + Math.sin(time + pet.id) * 3);
+
+      if (pet.damageFlash > 0 && Math.floor(pet.damageFlash * 20) % 2 === 0) {
+        this.ctx.globalAlpha = 0.5;
+      }
+
+      if (!pet.active || pet.health <= 0) {
+        this.ctx.globalAlpha = 0.3;
+      } else if (pet.energy <= 0) {
+        this.ctx.globalAlpha = 0.5;
+      }
+
+      switch (pet.type) {
+        case PET_TYPES.SCOUT:
+          this.renderScoutPet(pet, size, half, time);
+          break;
+        case PET_TYPES.MAGNET:
+          this.renderMagnetPet(pet, size, half, time);
+          break;
+        case PET_TYPES.DEFENDER:
+          this.renderDefenderPet(pet, size, half, time);
+          break;
+      }
+
+      this.ctx.restore();
+
+      if (pet.active && pet.health > 0) {
+        const barWidth = size * 1.5;
+        const barHeight = 3;
+        const barX = screen.x - barWidth / 2;
+        const barY = screen.y + half + 6;
+
+        this.ctx.fillStyle = '#333';
+        this.ctx.fillRect(barX, barY, barWidth, barHeight);
+        this.ctx.fillStyle = pet.health > pet.maxHealth * 0.3 ? '#4CAF50' : '#F44336';
+        this.ctx.fillRect(barX, barY, barWidth * (pet.health / pet.maxHealth), barHeight);
+
+        this.ctx.fillStyle = '#333';
+        this.ctx.fillRect(barX, barY + barHeight + 1, barWidth, barHeight - 1);
+        this.ctx.fillStyle = '#2196F3';
+        this.ctx.fillRect(barX, barY + barHeight + 1, barWidth * (pet.energy / pet.maxEnergy), barHeight - 1);
+      }
+    }
+  }
+
+  renderScoutPet(pet, size, half, time) {
+    this.ctx.fillStyle = pet.def.color;
+    this.ctx.shadowColor = pet.def.color;
+    this.ctx.shadowBlur = 10;
+    
+    this.ctx.beginPath();
+    this.ctx.ellipse(0, 0, half, half * 0.5, 0, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    this.ctx.fillStyle = '#87CEEB';
+    this.ctx.beginPath();
+    this.ctx.arc(0, -half * 0.2, half * 0.4, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    const rotAngle = time * 10;
+    this.ctx.fillStyle = '#555';
+    this.ctx.save();
+    this.ctx.rotate(rotAngle);
+    this.ctx.fillRect(-half * 1.2, -2, half * 2.4, 4);
+    this.ctx.restore();
+    
+    this.ctx.shadowBlur = 0;
+  }
+
+  renderMagnetPet(pet, size, half, time) {
+    this.ctx.fillStyle = pet.def.color;
+    this.ctx.shadowColor = pet.def.color;
+    this.ctx.shadowBlur = 8;
+    
+    this.ctx.fillRect(-half * 0.8, -half * 0.6, half * 1.6, half * 0.4);
+    
+    this.ctx.fillStyle = '#E53935';
+    this.ctx.fillRect(-half * 0.8, -half * 0.2, half * 0.7, half * 0.8);
+    this.ctx.fillStyle = '#1E88E5';
+    this.ctx.fillRect(half * 0.1, -half * 0.2, half * 0.7, half * 0.8);
+    
+    const pulseAlpha = 0.3 + Math.sin(time * 3) * 0.2;
+    this.ctx.fillStyle = `rgba(255, 105, 180, ${pulseAlpha})`;
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, half * 1.5, 0, Math.PI * 2);
+    this.ctx.fill();
+    
+    this.ctx.shadowBlur = 0;
+  }
+
+  renderDefenderPet(pet, size, half, time) {
+    this.ctx.fillStyle = pet.def.color;
+    this.ctx.shadowColor = pet.def.color;
+    this.ctx.shadowBlur = 10;
+    
+    this.ctx.beginPath();
+    this.ctx.roundRect(-half * 0.7, -half * 0.8, half * 1.4, half * 1.4, 3);
+    this.ctx.fill();
+    
+    this.ctx.fillStyle = '#FFEB3B';
+    const eyeGlow = 0.6 + Math.sin(time * 5) * 0.4;
+    this.ctx.globalAlpha = eyeGlow;
+    this.ctx.fillRect(-half * 0.45, -half * 0.4, half * 0.3, half * 0.2);
+    this.ctx.fillRect(half * 0.15, -half * 0.4, half * 0.3, half * 0.2);
+    this.ctx.globalAlpha = 1;
+    
+    this.ctx.fillStyle = '#666';
+    this.ctx.fillRect(-half * 0.6, half * 0.2, half * 1.2, half * 0.2);
+    
+    if (pet.targetEnemy) {
+      this.ctx.fillStyle = '#FF0000';
+      this.ctx.globalAlpha = 0.6 + Math.sin(time * 8) * 0.3;
+      this.ctx.beginPath();
+      this.ctx.arc(0, -half * 0.9, 3, 0, Math.PI * 2);
+      this.ctx.fill();
+      this.ctx.globalAlpha = 1;
+    }
+    
+    this.ctx.shadowBlur = 0;
+  }
+
+  renderPetRanges(petManager, player) {
+    for (const pet of petManager.pets) {
+      if (!pet.active || pet.health <= 0 || pet.energy <= 0) continue;
+      const screen = this.worldToScreen(pet.x, pet.y);
+      const range = pet.range * TILE_SIZE;
+      
+      const time = Date.now() * 0.002;
+      const alpha = 0.08 + Math.sin(time + pet.id) * 0.03;
+      
+      this.ctx.strokeStyle = pet.def.color;
+      this.ctx.globalAlpha = alpha * 2;
+      this.ctx.lineWidth = 1;
+      this.ctx.setLineDash([4, 4]);
+      this.ctx.beginPath();
+      this.ctx.arc(screen.x, screen.y, range, 0, Math.PI * 2);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+      this.ctx.globalAlpha = 1;
+    }
+  }
+
+  renderDarkness(player, pets = null) {
     const depth = player.tileY - SURFACE_Y;
     if (depth <= 0) return;
 
@@ -586,17 +742,54 @@ export class Renderer {
     if (darknessRatio < 0.1) return;
 
     const screen = this.worldToScreen(player.x, player.y);
-    const lightRadius = 200 - darknessRatio * 80;
+    let lightRadius = 200 - darknessRatio * 80;
 
+    let scoutBonus = 0;
+    if (pets) {
+      scoutBonus = pets.getScoutRangeBonus() * TILE_SIZE * 0.5;
+    }
+    lightRadius += scoutBonus;
+
+    this.ctx.save();
+    this.ctx.globalCompositeOperation = 'source-over';
+    
+    this.ctx.fillStyle = `rgba(0,0,0,${darknessRatio * 0.85})`;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    this.ctx.globalCompositeOperation = 'destination-out';
+    
     const gradient = this.ctx.createRadialGradient(
       screen.x, screen.y, 0,
       screen.x, screen.y, lightRadius
     );
-    gradient.addColorStop(0, 'rgba(0,0,0,0)');
-    gradient.addColorStop(0.7, `rgba(0,0,0,${darknessRatio * 0.5})`);
-    gradient.addColorStop(1, `rgba(0,0,0,${darknessRatio * 0.85})`);
+    gradient.addColorStop(0, 'rgba(0,0,0,1)');
+    gradient.addColorStop(0.6, 'rgba(0,0,0,0.8)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
     this.ctx.fillStyle = gradient;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    if (pets) {
+      for (const pet of pets.pets) {
+        if (pet.type !== PET_TYPES.SCOUT) continue;
+        if (!pet.active || pet.health <= 0 || pet.energy <= 0) continue;
+        
+        const petScreen = this.worldToScreen(pet.x, pet.y);
+        const petLightRadius = pet.range * TILE_SIZE * 0.8;
+        
+        const petGrad = this.ctx.createRadialGradient(
+          petScreen.x, petScreen.y, 0,
+          petScreen.x, petScreen.y, petLightRadius
+        );
+        petGrad.addColorStop(0, 'rgba(0,0,0,1)');
+        petGrad.addColorStop(0.7, 'rgba(0,0,0,0.5)');
+        petGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+        this.ctx.fillStyle = petGrad;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+    }
+
+    this.ctx.restore();
   }
 }
